@@ -48,7 +48,7 @@ exports.ItemFactory = function(item, mid, itemCategory){
     };
     return    {
         title: item.title,
-        subtitle: "Full Price: " + item.realPrice + " Sale Price: "+ item.dealPrice + " Percentage: "+ item.dealPercentage,
+        subtitle: "Full Price: " + item.realPrice + "\n Sale Price: "+ item.dealPrice + "\n Deal Percentage: "+ item.dealPercentage,
         item_url: item.url,
         image_url: item.img,
         buttons: [

@@ -10,9 +10,12 @@ let constants = {
     CHEAP: "cheapItem",
     DEAL: "dealItem",
     STANDARD: "standardItem",
-    LIKE_FACTOR: 20,
-    UN_LIKE_FACTOR: 30,
-    BUY_FACTOR: 50
+    LIKE_FACTOR: 0.2,
+    UN_LIKE_FACTOR: 0.3,
+    BUY_FACTOR: 0.5,
+    LIKE_MOVE_PERCENTAGE: 0.5,
+    UN_LIKE_MOVE_PERCENTAGE: 1
+
 
 };
 exports.constants = constants;
