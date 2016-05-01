@@ -9,6 +9,7 @@ const db = require('./db/server');
 const ItemFactory = Messages.ItemFactory;
 const exampleItem = new ItemFactory({title: "Example", url: "www.google.com", img:"http://img.wcdn.co.il/w/w-635/901148-5.jpg"});
 let welcomeMsgId = null;
+let genericTemplateId = null;
 let msgArray = [];
 let bot = new Bot({
     token: 'EAAG75iLWOrEBAN9EuPZACyJank8NNfZAFA0WJ21A52KrgEqQIE6jrXZB4vJXri6LjBZB1YZCNaSuOwUcmgLZBvLKZA1JYBxl4fb6lFZA0cLbZB34h30ESSZBsWOML74OwLE0F5CHOJPzrFZCrhZAZAIYcI66e3MPQZCv93Dmc3uQQmwhXZCeAZDZD',
@@ -22,20 +23,41 @@ bot.on('message', (payload, reply) => {
     bot.getProfile(payload.sender.id, (err, profile) => {
         if (err){
             console.log(err);
-        }
-        reply({ text:" Hey " + profile.first_name + ", Welcome to Crayze!!"}, (err,response) => {
-            if (err){
-                console.log(err);
+        }else{
+            if (payload.message.text.trim().indexOf("reset crayze") > -1){
+                db.resetUserDeals(profile, (err)=>{
+                    if (err){
+                        console.log(err)
+                    }else{
+                        sendFashion(profile, payload, reply);
+                    }
+                })
+            }else if(payload.message.text.trim().indexOf("crayze") > -1){
+                db.getUserLastChoice(profile, (err,lastChoice)=> {
+                    if (lastChoice === constants.FASHION) {
+                        sendFashion(profile, payload, reply);
+                    } else {
+                        console.log("wierd.");
+                    }
+                })
+            } else{
+                reply({ text:" Hey " + profile.first_name + ", Welcome to Crayze!!"}, (err,response) => {
+                    if (err){
+                        console.log(err);
+                    }
+                    welcomeMsgId = response.message_id;
+                    console.log(`Echoed back to ${profile.first_name} ${profile.last_name} ${profile.gender}`)
+                })
             }
-            welcomeMsgId = response.message_id;
-            console.log(`Echoed back to ${profile.first_name} ${profile.last_name} ${profile.gender}`)
-        })
+        }
     })
 });
 bot.on('delivery', (payload, reply)=>{
     bot.getProfile(payload.sender.id ,(err, profile)=>{
         if (payload.delivery.mids.indexOf(welcomeMsgId) > -1) {
             reply({attachment: Messages.welcome(profile)})
+        }else if(payload.delivery.mids.indexOf(genericTemplateId) > -1){
+            reply({text: "Hit crayze for more!"})
         }
     });
 });
@@ -47,30 +69,47 @@ function isJson(string){
     }
     return true;
 }
+function sendFashion(profile, payload, reply){
+    db.getFashion(profile,(err, result)=>{
+        if (err){
+            console.log(err)
 
+        }else{
+            if (result.length === 0){
+                reply({text: "Oops looks like we ran out of deal at this moment, type reset crayze to check if you missed something!"})
+            }else{
+                let genericTemplate = new Messages.TemplateFactory();
+                result.forEach((item)=>{
+                    let itemMsg = Messages.ItemFactory(item.deal, item.deal._id, item.deal.itemCategory);
+                    genericTemplate.payload.elements.push(itemMsg);
+                    let itemObj = _.clone(itemMsg);
+                    itemObj._id = item.deal._id;
+                    msgArray.push(itemObj);
+                });
+                reply({attachment: genericTemplate}, (err, response)=>{
+                    if (err) {
+                        console.log(err)
+                    }else{
+                        genericTemplateId = response.message_id;
+                    }
+                });
+                db.setUserLastChoice(constants.FASHION, profile, (err)=>{
+                    if (err){
+                        console.log(err);
+                    }
+                });
+            }
+        }
+    })
+}
 bot.on('postback', (payload, reply)=>{
     bot.getProfile(payload.sender.id, (err, profile)=>{
         if (payload.postback.payload === constants.FASHION){
-            db.getFashion(profile,(err, result)=>{
-                if (err){
-                    console.log(err)
-
-                }else{
-                    let genericTemplate = new Messages.TemplateFactory();
-                    result.forEach((item)=>{
-                        let itemMsg = Messages.ItemFactory(item.deal, item.deal._id, item.deal.itemCategory);
-                        genericTemplate.payload.elements.push(itemMsg);
-                        let itemObj = _.clone(itemMsg);
-                        itemObj._id = item.deal._id;
-                        msgArray.push(itemObj);
-                    });
-                    reply({attachment: genericTemplate}, (err, response)=>{
-                        if (err) {
-                            console.log(err)
-                        }
-                    });
-                }
-            })
+            if (err){
+                console.log(err)
+            }else{
+                sendFashion(profile, payload, reply);
+            }
         }else if(payload.postback.payload === constants.SPORTS){
             reply({text: "get sport"})
         }else if(payload.postback.payload === constants.BOTS){
@@ -208,3 +247,5 @@ bot.on('postback', (payload, reply)=>{
 //        }
 //    ]);
 http.createServer(bot.middleware()).listen(3000);
+
+//TODO: move all global variables to user object.

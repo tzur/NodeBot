@@ -5,7 +5,9 @@ let userSchema = new mongoose.Schema({
     last_name: String,
     cheapGrade: Number,
     standardGrade: Number,
-    dealGrade: Number
+    dealGrade: Number,
+    lastChoice: String,
+    deals: Array
 });
 let itemSchema = new mongoose.Schema({
     itemCategory: [String],

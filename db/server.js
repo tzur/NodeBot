@@ -99,6 +99,51 @@ function init(){
     //
     //})
 }
+exports.getUserLastChoice = (user, cb)=>{
+    User.findOne({first_name: user.first_name, last_name: user.last_name}, (err, doc)=>{
+        if (err){
+            console.log(err);
+            cb(err);
+        }else{
+            cb(null, doc.lastChoice);
+        }
+    })
+};
+exports.resetUserDeals = (user, cb)=>{
+    User.findOne({first_name: user.first_name, last_name: user.last_name}, (err, doc)=>{
+        if (err){
+            console.log(err);
+            cb(err);
+        }else{
+            doc.deals = [];
+            doc.save((err)=>{
+                if (err){
+                    cb(err)
+                }else{
+                    console.log("erased");
+                    cb(null)
+                }
+            })
+        }
+    })
+};
+exports.setUserLastChoice = (lastChoice,user, cb)=>{
+    User.findOne({first_name: user.first_name, last_name: user.last_name}, (err, doc)=>{
+        if (err){
+            console.log(err);
+            cb(err);
+        }else{
+            doc.lastChoice = lastChoice;
+            doc.save((err)=>{
+                if (err){
+                    cb(err)
+                }else{
+                    cb(null)
+                }
+            })
+        }
+    })
+};
 exports.handleLike = (category)=>{
   if (category === constants.CHEAP){
 
@@ -163,6 +208,21 @@ function handleFashionItem(givenItem, companyName){
         }
     })
 }
+function newDeal(dealId, user){
+    if (user.deals.indexOf(dealId) > -1){
+        return false;
+    }else{
+        return true;
+    }
+}
+function updateUserDeals(user, dealId){
+    user.deals.push(dealId);
+    user.save((err)=>{
+        if (err) {
+            console.log(err);
+        }
+    })
+}
 exports.getFashion = function(user, callback){
     handleUser(user, (err, user)=>{
         if (err){
@@ -184,30 +244,38 @@ exports.getFashion = function(user, callback){
                     }else{
                         let i =0;
                         let j=0;
+                        let total = 0;
                         while (i<numberOfCheap && j < doc.type.fashion.length){
-                            if (doc.type.fashion[j].itemCategory.indexOf(constants.CHEAP) > -1){
+                            if (doc.type.fashion[j].itemCategory.indexOf(constants.CHEAP) > -1 && newDeal(doc.type.fashion[j]._id, user)){
                                 userDeals.push({deal: doc.type.fashion[j], order: numberOfCheap});
+                                updateUserDeals(user, doc.type.fashion[j]._id);
                                 i++;
+                                total++;
                             }
                             j++;
                         }
                         i=0;
                         j=0;
                         while (i<numberOfDeal && j < doc.type.fashion.length){
-                            if (doc.type.fashion[j].itemCategory.indexOf(constants.DEAL) > -1){
+                            if (doc.type.fashion[j].itemCategory.indexOf(constants.DEAL) > -1 && newDeal(doc.type.fashion[j]._id, user) ){
                                 userDeals.push({deal: doc.type.fashion[j], order: numberOfDeal});
+                                updateUserDeals(user, doc.type.fashion[j]._id);
                                 i++;
+                                total++;
                             }
                             j++;
 
                         }
                         i=0;
                         j=0;
-                        while(i<numberOfStandard && j < doc.type.fashion.length){
+                        while((i<numberOfStandard && j < doc.type.fashion.length) || (total < ITEMS_AMOUNT && j < doc.type.fashion.length )){
                             if (doc.type.fashion[j].itemCategory.indexOf(constants.DEAL)  == -1 &&
-                                        doc.type.fashion[j].itemCategory.indexOf(constants.CHEAP) == -1){
+                                        doc.type.fashion[j].itemCategory.indexOf(constants.CHEAP) == -1 &&
+                                        newDeal(doc.type.fashion[j]._id, user)){
                                 userDeals.push({deal: doc.type.fashion[j], order: numberOfStandard});
+                                updateUserDeals(user, doc.type.fashion[j]._id);
                                 i++;
+                                total++;
                             }
                          j++;
                         }
@@ -221,7 +289,6 @@ exports.getFashion = function(user, callback){
         }
     });
 };
-
 exports.addItems = function(items){
   let priceSortItems = items.slice();
   let dealSortItems = items.slice();
