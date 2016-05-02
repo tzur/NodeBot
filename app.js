@@ -12,7 +12,7 @@ let welcomeMsgId = null;
 let genericTemplateId = null;
 let msgArray = [];
 let bot = new Bot({
-    token: 'EAAG75iLWOrEBAN9EuPZACyJank8NNfZAFA0WJ21A52KrgEqQIE6jrXZB4vJXri6LjBZB1YZCNaSuOwUcmgLZBvLKZA1JYBxl4fb6lFZA0cLbZB34h30ESSZBsWOML74OwLE0F5CHOJPzrFZCrhZAZAIYcI66e3MPQZCv93Dmc3uQQmwhXZCeAZDZD',
+    token: 'EAAG75iLWOrEBANZB0t5qtJFOOQ1bXPcZC8UCBbEdeZAGZAplrPrTxRFRZCf9CdJZBKRElm5tbMMu7H94sn9Tju5iwPKSFJ4fyknaH4p3RfLBZCKZCgpWolgFix2k03Mocole3jRZBZBPZAYkJoYo9stXIPE2pzsBHK7Ty2sz5ZATh7mFNgZDZD',
     verify: 'VERIFY_TOKEN'
 });
 bot.on('error', (err) => {
@@ -41,7 +41,8 @@ bot.on('message', (payload, reply) => {
                     }
                 })
             } else{
-                reply({ text:" Hey " + profile.first_name + ", Welcome to Crayze!!"}, (err,response) => {
+                reply({ text:" Hey " + profile.first_name + ", Welcome to Crayze, i'm super excited to " +
+                                        "show you the best deals online"}, (err,response) => {
                     if (err){
                         console.log(err);
                     }
@@ -222,7 +223,7 @@ bot.on('postback', (payload, reply)=>{
 //            dealPrice: 20,
 //            title: "Jersey crop top",
 //            url: 'http://www2.hm.com/en_gb/productpage.0315076037.html',
-//            img: 'http://lp2.hm.com/hmprod?set=source[/environment/2015/6AY_0078_010R.jpg],width[3507],height[4101],x[856],y[240],type[FASHION_FRONT]&hmver=0&call=url[file:/product/main]'
+//            img: 'http://lp2.hm.com/hmprod?set=source[/environment/2015/6AY_0078_010R.jpg],width[150000],height[4000],x[100],y[500],type[FASHION_FRONT]&hmver=0&call=url[file:/product/main]'
 //        },
 //        {
 //            realPrice: 750,
@@ -249,3 +250,13 @@ bot.on('postback', (payload, reply)=>{
 http.createServer(bot.middleware()).listen(3000);
 
 //TODO: move all global variables to user object.
+//TODO: Check on ella phone - it doesn't reset crayze and crayze is moving to many screens.
+//TODO: percentage, photos (service that makes them fit for the bot?).
+//TODO: Ready? Here it comes! our best 10 deals!(instead choose a category).
+//Item buttons:
+//TODO: 10 of "hit me with your best"
+//TODO: Like replace with - More of those
+//TODO: Unlike replace with - Nah..
+//On 10 best delivered:
+//TODO: Buttons: Hit Me Again!  - Choose a Category!
+//TODO: Accessories, Tops, Dresses.

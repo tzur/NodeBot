@@ -64,22 +64,22 @@ exports.handleAction = (actionObj, user, callback)=>{
 
 };
 function init(){
-    Company.findOne({name: "H&M3"}, (err, doc)=>{
+    Company.findOne({name: "H&M4"}, (err, doc)=>{
         if (err){
             console.log(err)
         }else{
             if (doc === null){
-                console.log("Adding H&M3 company");
-                let fox = new Company({name: "H&M3", fashion: []});
+                console.log("Adding H&M4 company");
+                let fox = new Company({name: "H&M4", fashion: []});
                 fox.save((err)=>{
                     if (err){
                         console.log(err);
                     }else{
-                        console.log("Added H&M3");
+                        console.log("Added H&M4");
                     }
                 })
             }else{
-                console.log("H&M3 already here")
+                console.log("H&M4 already here")
             }
         }
     });
@@ -235,7 +235,7 @@ exports.getFashion = function(user, callback){
             console.log("number of deal:" +numberOfDeal);
             console.log("number of cheap:" +numberOfCheap);
             console.log("number of standard:" +numberOfStandard);
-            Company.findOne({name: "H&M3"}, (err,doc)=>{
+            Company.findOne({name: "H&M4"}, (err,doc)=>{
                 if (err){
                     console.log(err)
                 }else{
@@ -315,7 +315,7 @@ exports.addItems = function(items){
       }
   }
   for (let i=0;i<items.length;i++){
-      handleFashionItem(items[i], "H&M3");
+      handleFashionItem(items[i], "H&M4");
   }
 };
 init();
