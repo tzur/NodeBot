@@ -1,3 +1,4 @@
 /db/server.js
 /api/extractor.js
+/api/resizeImg.js
 node_modules
