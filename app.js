@@ -8,8 +8,8 @@ const serverHandleAction = require('./db/server').handleAction;
 const db = require('./db/server');
 const ItemFactory = Messages.ItemFactory;
 const exampleItem = new ItemFactory({title: "Example", url: "www.google.com", img:"http://img.wcdn.co.il/w/w-635/901148-5.jpg"});
-let welcomeMsgId = null;
-let genericTemplateId = null;
+//let welcomeMsgId = null;
+//let genericTemplateId = null;
 let msgArray = [];
 let bot = new Bot({
     token: 'EAAG75iLWOrEBANZB0t5qtJFOOQ1bXPcZC8UCBbEdeZAGZAplrPrTxRFRZCf9CdJZBKRElm5tbMMu7H94sn9Tju5iwPKSFJ4fyknaH4p3RfLBZCKZCgpWolgFix2k03Mocole3jRZBZBPZAYkJoYo9stXIPE2pzsBHK7Ty2sz5ZATh7mFNgZDZD',
@@ -19,48 +19,38 @@ bot.on('error', (err) => {
     console.log(err.message)
 });
 
+function resetCrayze(profile, reply){
+    db.resetUserDeals(profile, (err)=>{
+        if (err){
+            console.log(err)
+        }else{
+            sendFashion(profile, reply)
+        }
+    })
+}
 bot.on('message', (payload, reply) => {
     bot.getProfile(payload.sender.id, (err, profile) => {
         if (err){
             console.log(err);
         }else{
-            if (payload.message.text.trim().indexOf("reset crayze") > -1){
-                db.resetUserDeals(profile, (err)=>{
-                    if (err){
-                        console.log(err)
-                    }else{
-                        sendFashion(profile, payload, reply);
-                    }
-                })
-            }else if(payload.message.text.trim().indexOf("crayze") > -1){
-                db.getUserLastChoice(profile, (err,lastChoice)=> {
-                    if (lastChoice === constants.FASHION) {
-                        sendFashion(profile, payload, reply);
-                    } else {
-                        console.log("wierd.");
-                    }
-                })
-            } else{
-                reply({ text:" Hey " + profile.first_name + ", Welcome to Crayze, i'm super excited to " +
-                                        "show you the best deals online"}, (err,response) => {
-                    if (err){
-                        console.log(err);
-                    }
-                    welcomeMsgId = response.message_id;
-                    console.log(`Echoed back to ${profile.first_name} ${profile.last_name} ${profile.gender}`)
-                })
-            }
+            reply({ text:" Hey " + profile.first_name + ", Welcome to Crayze, i'm super excited to " +
+                                    "show you the best deals online"}, (err,response) => {
+                if (err){
+                    console.log(err);
+                }else{
+
+                    console.log(`Echoed back to ${profile.first_name} ${profile.last_name} ${profile.gender}`);
+                    reply({text: "Ready? Here it comes!"}, (err, response)=>{
+                        if (err){
+                            console.log(err)
+                        }else{
+                            sendFashion(profile, reply);
+                        }
+                    })
+                }
+            })
         }
     })
-});
-bot.on('delivery', (payload, reply)=>{
-    bot.getProfile(payload.sender.id ,(err, profile)=>{
-        if (payload.delivery.mids.indexOf(welcomeMsgId) > -1) {
-            reply({attachment: Messages.welcome(profile)})
-        }else if(payload.delivery.mids.indexOf(genericTemplateId) > -1){
-            reply({text: "Hit crayze for more!"})
-        }
-    });
 });
 function isJson(string){
     try{
@@ -70,28 +60,29 @@ function isJson(string){
     }
     return true;
 }
-function sendFashion(profile, payload, reply){
+
+function sendFashion(profile, reply){
     db.getFashion(profile,(err, result)=>{
         if (err){
             console.log(err)
 
         }else{
             if (result.length === 0){
-                reply({text: "Oops looks like we ran out of deal at this moment, type reset crayze to check if you missed something!"})
+
+                reply({attachment: Messages.finishedCrayze(profile.first_name)})
             }else{
                 let genericTemplate = new Messages.TemplateFactory();
                 result.forEach((item)=>{
                     let itemMsg = Messages.ItemFactory(item.deal, item.deal._id, item.deal.itemCategory);
-                    genericTemplate.payload.elements.push(itemMsg);
-                    let itemObj = _.clone(itemMsg);
-                    itemObj._id = item.deal._id;
-                    msgArray.push(itemObj);
+                    genericTemplate.addElement(itemMsg);
                 });
                 reply({attachment: genericTemplate}, (err, response)=>{
                     if (err) {
                         console.log(err)
                     }else{
-                        genericTemplateId = response.message_id;
+                        setTimeout(()=>{
+                            reply({attachment: Messages.firstChoiceScreen()})
+                        }, 2000)
                     }
                 });
                 db.setUserLastChoice(constants.FASHION, profile, (err)=>{
@@ -109,7 +100,7 @@ bot.on('postback', (payload, reply)=>{
             if (err){
                 console.log(err)
             }else{
-                sendFashion(profile, payload, reply);
+                sendFashion(profile, reply);
             }
         }else if(payload.postback.payload === constants.SPORTS){
             reply({text: "get sport"})
@@ -119,15 +110,30 @@ bot.on('postback', (payload, reply)=>{
 
         }else if (isJson(payload.postback.payload)){
             let customPostback = JSON.parse(payload.postback.payload);
-            serverHandleAction(customPostback, profile, (err,result)=>{
-                if (err){
-                    console.log("im here");
-                    console.log(err)
-                }else{
-
-                    reply({text:"We will adapt our deals to your taste!"+  "(DEBUG) result: " + result.cheapGrade  + " " +result.standardGrade +" " + result.dealGrade })
+            if (customPostback.type === constants.ITEM){
+                serverHandleAction(customPostback, profile, (err,result)=>{
+                    if (err){
+                        console.log(err)
+                    }else{
+                        reply({text:"We will adapt our deals to your taste!"+  "(DEBUG) result: " + result.cheapGrade
+                                    + " " +result.standardGrade +" " + result.dealGrade })
+                    }
+                });
+            } else{
+                //First Multiple choice screen handle.
+                if (customPostback.type === constants.FIRST_CHOICE){
+                    if (customPostback.pressed === constants.HIT_ME_MORE){
+                        sendFashion(profile, reply);
+                    }else if (customPostback.pressed === constants.CATEGORY){
+                        reply({attachment: Messages.secondChoiceSCreen()})
+                    }
+                }else if (customPostback.type === constants.FINISHED_CRAYZE){ //Second Multiple choice screen handle.
+                    if (customPostback.pressed === constants.RESET_CRAYZE){
+                        resetCrayze(profile, reply);
+                    }
                 }
-            });
+            }
+
 
         }
     })
@@ -250,13 +256,9 @@ bot.on('postback', (payload, reply)=>{
 http.createServer(bot.middleware()).listen(3000);
 
 //TODO: move all global variables to user object.
-//TODO: Check on ella phone - it doesn't reset crayze and crayze is moving to many screens.
 //TODO: percentage, photos (service that makes them fit for the bot?).
 //TODO: Ready? Here it comes! our best 10 deals!(instead choose a category).
 //Item buttons:
-//TODO: 10 of "hit me with your best"
-//TODO: Like replace with - More of those
-//TODO: Unlike replace with - Nah..
 //On 10 best delivered:
 //TODO: Buttons: Hit Me Again!  - Choose a Category!
 //TODO: Accessories, Tops, Dresses.

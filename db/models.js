@@ -7,6 +7,8 @@ let userSchema = new mongoose.Schema({
     standardGrade: Number,
     dealGrade: Number,
     lastChoice: String,
+    welcomeMsgId: String,
+    itemsMsgId: String,
     deals: Array
 });
 let itemSchema = new mongoose.Schema({

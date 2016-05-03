@@ -14,8 +14,19 @@ let constants = {
     UN_LIKE_FACTOR: 0.3,
     BUY_FACTOR: 0.5,
     LIKE_MOVE_PERCENTAGE: 0.5,
-    UN_LIKE_MOVE_PERCENTAGE: 1
-
-
+    UN_LIKE_MOVE_PERCENTAGE: 1,
+    FIRST_CHOICE: "firstChoice",
+    SECOND_CHOICE: "secondChoice",
+    HIT_ME_MORE: "hitMeMore",
+    CATEGORY: "category",
+    ACCESSORIES: "Accessories",
+    DRESSES: "Dresses",
+    TOPS: "Tops",
+    ITEM: "item",
+    ITEM_MSG: "itemsMsgId",
+    WELCOME_MSG: "welcomeMsgId",
+    RESET_CRAYZE: "rsetCrayze",
+    FINISHED_CRAYZE: "finishedCrayze",
+    SUPER_POWER: "superPower"
 };
 exports.constants = constants;
